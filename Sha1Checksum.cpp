@@ -1,6 +1,7 @@
 #include "PolarSSL-cpp.h"
 #include <memory>
 #include <string>
+#include <cstring>
 #include "Sha1Checksum.h"
 
 

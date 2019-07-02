@@ -1,5 +1,6 @@
 #include "PolarSSL-cpp.h"
 #include <memory>
+#include <cstring>
 #include "AesCfb128Encryptor.h"
 
 
