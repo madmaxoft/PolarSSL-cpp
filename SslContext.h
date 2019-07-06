@@ -3,13 +3,13 @@
 #include "PolarSSL-cpp.h"
 #include <memory>
 #include <string>
-#include "mbedtls/ssl.h"
 
 
 
 
 
 // fwd:
+struct mbedtls_ssl_context;
 class CtrDrbgContext;
 class SslConfig;
 
@@ -85,7 +85,7 @@ public:
 protected:
 
 	/** The wrapped SSL context used by mbedTLS. */
-	mbedtls_ssl_context mSsl;
+	std::unique_ptr<mbedtls_ssl_context> mSsl;
 
 	/** Configuration of the SSL context. */
 	std::shared_ptr<const SslConfig> mConfig;

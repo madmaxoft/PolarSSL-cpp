@@ -16,3 +16,11 @@
 
 
 
+
+
+/** Error codes from mbedtls ssl.h */
+
+#define MBEDTLS_ERR_SSL_WANT_READ                         -0x6900  /**< No data of requested type currently available on underlying transport. */
+#define MBEDTLS_ERR_SSL_WANT_WRITE                        -0x6880  /**< Connection requires a write call. */
+
+

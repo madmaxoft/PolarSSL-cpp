@@ -3,13 +3,14 @@
 #include "PolarSSL-cpp.h"
 #include <memory>
 #include <vector>
-#include "mbedtls/ssl.h"
 
 
 
 
 
 // fwd:
+struct mbedtls_x509_crt;
+struct mbedtls_ssl_config;
 class CryptoKey;
 class CtrDrbgContext;
 class X509Cert;
@@ -79,12 +80,12 @@ public:
 	static std::shared_ptr<const SslConfig> getDefaultServerConfig();
 
 	/** Returns the wrapped MbedTls object, so this class can be used as a direct replacement. */
-	operator const mbedtls_ssl_config * () const { return &mConfig; }
+	operator const mbedtls_ssl_config * () const { return mConfig.get(); }
 
 
 private:
 
-	mbedtls_ssl_config mConfig;
+	std::unique_ptr<mbedtls_ssl_config> mConfig;
 	CtrDrbgContextPtr mCtrDrbg;
 	X509CertPtr mOwnCert;
 	CryptoKeyPtr mOwnCertPrivKey;

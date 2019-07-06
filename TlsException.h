@@ -1,6 +1,6 @@
 #pragma once
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 
 
@@ -9,9 +9,9 @@
 
 /** Represents an error returned from an mbedTls library call. */
 class TlsException:
-	public std::exception
+	public std::runtime_error
 {
-	using Super = std::exception;
+	using Super = std::runtime_error;
 
 public:
 	TlsException(const std::string & aErrorText, int aMbedTlsErrorCode);

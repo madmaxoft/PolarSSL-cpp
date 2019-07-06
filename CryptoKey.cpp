@@ -1,13 +1,15 @@
 #include "PolarSSL-cpp.h"
 #include "CryptoKey.h"
+#include "mbedtls/pk.h"
 
 
 
 
 
-CryptoKey::CryptoKey(void)
+CryptoKey::CryptoKey():
+	mPk(new mbedtls_pk_context)
 {
-	mbedtls_pk_init(&mPk);
+	mbedtls_pk_init(mPk.get());
 	mCtrDrbg.initialize("rsa_pubkey", 10);
 }
 
@@ -15,9 +17,10 @@ CryptoKey::CryptoKey(void)
 
 
 
-CryptoKey::CryptoKey(const std::string & aPublicKeyData)
+CryptoKey::CryptoKey(const std::string & aPublicKeyData):
+	mPk(new mbedtls_pk_context)
 {
-	mbedtls_pk_init(&mPk);
+	mbedtls_pk_init(mPk.get());
 	mCtrDrbg.initialize("rsa_pubkey", 10);
 	int res = parsePublic(aPublicKeyData.data(), aPublicKeyData.size());
 	if (res != 0)
@@ -34,7 +37,7 @@ CryptoKey::CryptoKey(const std::string & aPublicKeyData)
 
 CryptoKey::CryptoKey(const std::string & aPrivateKeyData, const std::string & aPassword)
 {
-	mbedtls_pk_init(&mPk);
+	mbedtls_pk_init(mPk.get());
 	mCtrDrbg.initialize("rsa_privkey", 11);
 	int res = parsePrivate(aPrivateKeyData.data(), aPrivateKeyData.size(), aPassword);
 	if (res != 0)
@@ -51,7 +54,7 @@ CryptoKey::CryptoKey(const std::string & aPrivateKeyData, const std::string & aP
 
 CryptoKey::~CryptoKey()
 {
-	mbedtls_pk_free(&mPk);
+	mbedtls_pk_free(mPk.get());
 }
 
 
@@ -63,7 +66,7 @@ int CryptoKey::decrypt(const Byte * aEncryptedData, size_t aEncryptedLength, Byt
 	ASSERT(isValid());
 
 	size_t DecryptedLen = aDecryptedMaxLength;
-	int res = mbedtls_pk_decrypt(&mPk,
+	int res = mbedtls_pk_decrypt(mPk.get(),
 		aEncryptedData, aEncryptedLength,
 		aDecryptedData, &DecryptedLen, aDecryptedMaxLength,
 		mbedtls_ctr_drbg_random, mCtrDrbg
@@ -84,7 +87,7 @@ int CryptoKey::encrypt(const Byte * aPlainData, size_t aPlainLength, Byte * aEnc
 	ASSERT(isValid());
 
 	size_t EncryptedLength = aEncryptedMaxLength;
-	int res = mbedtls_pk_encrypt(&mPk,
+	int res = mbedtls_pk_encrypt(mPk.get(),
 		aPlainData, aPlainLength, aEncryptedData, &EncryptedLength, aEncryptedMaxLength,
 		mbedtls_ctr_drbg_random, mCtrDrbg
 	);
@@ -103,7 +106,7 @@ int CryptoKey::parsePublic(const void * aData, size_t aNumBytes)
 {
 	ASSERT(!isValid());  // Cannot parse a second key
 
-	return mbedtls_pk_parse_public_key(&mPk, static_cast<const unsigned char *>(aData), aNumBytes);
+	return mbedtls_pk_parse_public_key(mPk.get(), static_cast<const unsigned char *>(aData), aNumBytes);
 }
 
 
@@ -119,12 +122,12 @@ int CryptoKey::parsePrivate(const void * aData, size_t aNumBytes, const std::str
 
 	if (aPassword.empty())
 	{
-		return mbedtls_pk_parse_key(&mPk, reinterpret_cast<const unsigned char *>(keyData.data()), aNumBytes + 1, nullptr, 0);
+		return mbedtls_pk_parse_key(mPk.get(), reinterpret_cast<const unsigned char *>(keyData.data()), aNumBytes + 1, nullptr, 0);
 	}
 	else
 	{
 		return mbedtls_pk_parse_key(
-			&mPk,
+			mPk.get(),
 			reinterpret_cast<const unsigned char *>(keyData.data()), aNumBytes + 1,
 			reinterpret_cast<const unsigned char *>(aPassword.c_str()), aPassword.size()
 		);
@@ -137,7 +140,7 @@ int CryptoKey::parsePrivate(const void * aData, size_t aNumBytes, const std::str
 
 bool CryptoKey::isValid(void) const
 {
-	return (mbedtls_pk_get_type(&mPk) != MBEDTLS_PK_NONE);
+	return (mbedtls_pk_get_type(mPk.get()) != MBEDTLS_PK_NONE);
 }
 
 

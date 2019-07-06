@@ -3,13 +3,14 @@
 #include "PolarSSL-cpp.h"
 #include <memory>
 #include <string>
-#include "mbedtls/x509_crt.h"
 
 
 
 
 
 // fwd:
+struct mbedtls_x509_crt;
+struct mbedtls_x509write_cert;
 class CryptoKey;
 class X509Cert;
 using X509CertPtr = std::shared_ptr<X509Cert>;
@@ -32,7 +33,7 @@ public:
 	int parse(const void * aCertContents, size_t aSize);
 
 	/** Returns the wrapped MbedTls object, so this class can be used as a direct replacement. */
-	operator mbedtls_x509_crt * () { return &mCert; }
+	operator mbedtls_x509_crt * () { return mCert.get(); }
 
 	/** Returns a self-signed certificate generated signed with the specified private key.
 	Returns a nullptr on failure. */
@@ -46,7 +47,7 @@ public:
 protected:
 
 	/** The wrapped MbedTls object. */
-	mbedtls_x509_crt mCert;
+	std::unique_ptr<mbedtls_x509_crt> mCert;
 } ;
 
 
@@ -96,7 +97,7 @@ public:
 protected:
 
 	/** The wrapped mbedTLS object. */
-	mbedtls_x509write_cert mCtx;
+	std::unique_ptr<mbedtls_x509write_cert> mCtx;
 
 	/** The private key to be used for signing (issuer key).
 	Kept as a shared ptr, so that we enforce object validity for as long as needed for writing. */

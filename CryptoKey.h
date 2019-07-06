@@ -3,7 +3,13 @@
 #include "PolarSSL-cpp.h"
 #include <string>
 #include "CtrDrbgContext.h"
-#include "mbedtls/pk.h"
+
+
+
+
+
+// fwd:
+struct mbedtls_pk_context;
 
 
 
@@ -51,16 +57,16 @@ public:
 	bool isValid(void) const;
 
 	/** Returns the wrapped MbedTls object, so this class can be used as a direct replacement. */
-	operator mbedtls_pk_context * () { return &mPk; }
+	operator mbedtls_pk_context * () { return mPk.get(); }
 
 	/** Returns the wrapped MbedTls object, so this class can be used as a direct replacement. */
-	operator const mbedtls_pk_context * () const { return &mPk; }
+	operator const mbedtls_pk_context * () const { return mPk.get(); }
 
 
 protected:
 
 	/** The MbedTls representation of the key data */
-	mbedtls_pk_context mPk;
+	std::unique_ptr<mbedtls_pk_context> mPk;
 
 	/** The random generator used in encryption and decryption */
 	CtrDrbgContext mCtrDrbg;

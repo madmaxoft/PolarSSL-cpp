@@ -5,6 +5,10 @@
 #include "CtrDrbgContext.h"
 #include "CryptoKey.h"
 #include "X509Cert.h"
+#include "mbedtls/ssl.h"
+
+
+
 
 
 // This allows us to debug SSL and certificate problems, but produce way too much output,
@@ -120,9 +124,10 @@ static int authModeToMbedTlsMode(SslAuthMode aAuthMode)
 ////////////////////////////////////////////////////////////////////////////////
 // SslConfig:
 
-SslConfig::SslConfig()
+SslConfig::SslConfig():
+	mConfig(new mbedtls_ssl_config)
 {
-	mbedtls_ssl_config_init(&mConfig);
+	mbedtls_ssl_config_init(mConfig.get());
 }
 
 
@@ -131,7 +136,7 @@ SslConfig::SslConfig()
 
 SslConfig::~SslConfig()
 {
-	mbedtls_ssl_config_free(&mConfig);
+	mbedtls_ssl_config_free(mConfig.get());
 }
 
 
@@ -141,7 +146,7 @@ SslConfig::~SslConfig()
 int SslConfig::initDefaults(const bool aIsClient)
 {
 	return mbedtls_ssl_config_defaults(
-		&mConfig,
+		mConfig.get(),
 		aIsClient ? MBEDTLS_SSL_IS_CLIENT : MBEDTLS_SSL_IS_SERVER,
 		MBEDTLS_SSL_TRANSPORT_STREAM,
 		MBEDTLS_SSL_PRESET_DEFAULT
@@ -155,7 +160,7 @@ int SslConfig::initDefaults(const bool aIsClient)
 void SslConfig::setAuthMode(const SslAuthMode aAuthMode)
 {
 	const int Mode = authModeToMbedTlsMode(aAuthMode);
-	mbedtls_ssl_conf_authmode(&mConfig, Mode);
+	mbedtls_ssl_conf_authmode(mConfig.get(), Mode);
 }
 
 
@@ -166,7 +171,7 @@ void SslConfig::setRng(CtrDrbgContextPtr aCtrDrbg)
 {
 	ASSERT(aCtrDrbg != nullptr);
 	mCtrDrbg = std::move(aCtrDrbg);
-	mbedtls_ssl_conf_rng(&mConfig, mbedtls_ctr_drbg_random, *mCtrDrbg);
+	mbedtls_ssl_conf_rng(mConfig.get(), mbedtls_ctr_drbg_random, *mCtrDrbg);
 }
 
 
@@ -175,7 +180,7 @@ void SslConfig::setRng(CtrDrbgContextPtr aCtrDrbg)
 
 void SslConfig::setDebugCallback(DebugCallback aCallbackFun, void * aCallbackData)
 {
-	mbedtls_ssl_conf_dbg(&mConfig, aCallbackFun, aCallbackData);
+	mbedtls_ssl_conf_dbg(mConfig.get(), aCallbackFun, aCallbackData);
 }
 
 
@@ -192,7 +197,7 @@ void SslConfig::setOwnCert(X509CertPtr aOwnCert, CryptoKeyPtr aOwnCertPrivKey)
 	mOwnCertPrivKey = std::move(aOwnCertPrivKey);
 
 	// Set into the config:
-	mbedtls_ssl_conf_own_cert(&mConfig, *mOwnCert, *mOwnCertPrivKey);
+	mbedtls_ssl_conf_own_cert(mConfig.get(), *mOwnCert, *mOwnCertPrivKey);
 }
 
 
@@ -201,7 +206,7 @@ void SslConfig::setOwnCert(X509CertPtr aOwnCert, CryptoKeyPtr aOwnCertPrivKey)
 
 void SslConfig::setVerifyCallback(CertVerifyCallback aCallbackFun, void * aCallbackData)
 {
-	mbedtls_ssl_conf_verify(&mConfig, aCallbackFun, aCallbackData);
+	mbedtls_ssl_conf_verify(mConfig.get(), aCallbackFun, aCallbackData);
 }
 
 
@@ -212,7 +217,7 @@ void SslConfig::setCipherSuites(std::vector<int> aCipherSuites)
 {
 	mCipherSuites = std::move(aCipherSuites);
 	mCipherSuites.push_back(0);  // Must be null terminated
-	mbedtls_ssl_conf_ciphersuites(&mConfig, mCipherSuites.data());
+	mbedtls_ssl_conf_ciphersuites(mConfig.get(), mCipherSuites.data());
 }
 
 
@@ -222,7 +227,7 @@ void SslConfig::setCipherSuites(std::vector<int> aCipherSuites)
 void SslConfig::setCACerts(X509CertPtr aCACert)
 {
 	mCACerts = std::move(aCACert);
-	mbedtls_ssl_conf_ca_chain(&mConfig, *mCACerts, nullptr);
+	mbedtls_ssl_conf_ca_chain(mConfig.get(), *mCACerts, nullptr);
 }
 
 
