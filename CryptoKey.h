@@ -53,6 +53,9 @@ public:
 	/** Returns the wrapped MbedTls object, so this class can be used as a direct replacement. */
 	operator mbedtls_pk_context * () { return &mPk; }
 
+	/** Returns the wrapped MbedTls object, so this class can be used as a direct replacement. */
+	operator const mbedtls_pk_context * () const { return &mPk; }
+
 
 protected:
 

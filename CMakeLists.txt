@@ -10,6 +10,7 @@ set(SRCS
 	Sha1Checksum.cpp
 	SslConfig.cpp
 	SslContext.cpp
+	TlsException.cpp
 	X509Cert.cpp
 )
 
@@ -23,9 +24,10 @@ set(HDRS
 	ErrorCodes.h
 	PolarSSL-cpp.h
 	RsaPrivateKey.h
+	Sha1Checksum.h
 	SslConfig.h
 	SslContext.h
-	Sha1Checksum.h
+	TlsException.h
 	X509Cert.h
 )
 
