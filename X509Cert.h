@@ -24,16 +24,25 @@ class X509Cert
 {
 public:
 
-	X509Cert(void);
-	~X509Cert(void);
+	/** Creates a new cert, destroys is upon wrapper destruction. */
+	X509Cert();
+
+	/** Wraps a new instance over an existing cert, NOT owning. */
+	X509Cert(mbedtls_x509_crt * aCert);
+
+	~X509Cert();
 
 	/** Parses the certificate chain data into the context.
 	The certificate can be DER- or PEM-encoded.
 	Returns 0 on succes, or mbedTLS error code on failure. */
 	int parse(const void * aCertContents, size_t aSize);
 
+	/** Returns the DER-encoded data of the public key encoded in the certificate.
+	Throws a TlsException upon failure. */
+	std::string publicKeyDer();
+
 	/** Returns the wrapped MbedTls object, so this class can be used as a direct replacement. */
-	operator mbedtls_x509_crt * () { return mCert.get(); }
+	operator mbedtls_x509_crt * () { return mCert; }
 
 	/** Returns a self-signed certificate generated signed with the specified private key.
 	Returns a nullptr on failure. */
@@ -43,11 +52,18 @@ public:
 		const std::string & aSubject
 	);
 
+	/** Wraps the specified mbedTls object with this wrapper.
+	The wrapper is only valid as long as the original context is valid. */
+	static X509CertPtr fromContext(mbedtls_x509_crt * aContext);
+
 
 protected:
 
 	/** The wrapped MbedTls object. */
-	std::unique_ptr<mbedtls_x509_crt> mCert;
+	mbedtls_x509_crt * mCert;
+
+	/** If true, the mCert is owned by this wrapper and should be freed upon destruction. */
+	bool mIsOwned;
 } ;
 
 

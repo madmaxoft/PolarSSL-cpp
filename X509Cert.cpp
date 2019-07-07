@@ -10,10 +10,21 @@
 
 
 
-X509Cert::X509Cert(void):
-	mCert(new mbedtls_x509_crt)
+X509Cert::X509Cert():
+	mCert(new mbedtls_x509_crt),
+	mIsOwned(true)
 {
-	mbedtls_x509_crt_init(mCert.get());
+	mbedtls_x509_crt_init(mCert);
+}
+
+
+
+
+
+X509Cert::X509Cert(mbedtls_x509_crt * aCert):
+	mCert(aCert),
+	mIsOwned(false)
+{
 }
 
 
@@ -22,7 +33,11 @@ X509Cert::X509Cert(void):
 
 X509Cert::~X509Cert()
 {
-	mbedtls_x509_crt_free(mCert.get());
+	if (mIsOwned)
+	{
+		mbedtls_x509_crt_free(mCert);
+		delete mCert;
+	}
 }
 
 
@@ -34,7 +49,22 @@ int X509Cert::parse(const void * aCertContents, size_t aSize)
 	// mbedTLS requires that PEM-encoded data is passed including the terminating NUL byte,
 	// and DER-encoded data is decoded properly even with an extra trailing NUL byte, so we simply add one to everything:
 	std::string certContents(static_cast<const char *>(aCertContents), aSize);
-	return mbedtls_x509_crt_parse(mCert.get(), reinterpret_cast<const unsigned char *>(certContents.data()), aSize + 1);
+	return mbedtls_x509_crt_parse(mCert, reinterpret_cast<const unsigned char *>(certContents.data()), aSize + 1);
+}
+
+
+
+
+
+std::string X509Cert::publicKeyDer()
+{
+	unsigned char buf[4096];
+	auto res = mbedtls_pk_write_pubkey_der(&mCert->pk, buf, sizeof(buf));
+	if (res < 0)
+	{
+		throw TlsException("Failed to write cert's public key to DER", res);
+	}
+	return std::string(reinterpret_cast<char *>(buf + sizeof(buf) - res), static_cast<size_t>(res));
 }
 
 
@@ -71,6 +101,15 @@ X509CertPtr X509Cert::fromPrivateKey(
 		LOG("Failed to create self-signed cert: %s", exc.what());
 		return nullptr;
 	}
+}
+
+
+
+
+
+X509CertPtr X509Cert::fromContext(mbedtls_x509_crt * aContext)
+{
+	return std::make_shared<X509Cert>(aContext);
 }
 
 
