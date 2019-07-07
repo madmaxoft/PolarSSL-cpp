@@ -19,12 +19,14 @@ using CryptoKeyPtr = std::shared_ptr<CryptoKey>;
 using CtrDrbgContextPtr = std::shared_ptr<CtrDrbgContext>;
 using X509CertPtr = std::shared_ptr<X509Cert>;
 
+
+/** Authentication modes, used by SslConfig::setAuthMode(). */
 enum class SslAuthMode
 {
-	None = 0,      // MBEDTLS_SSL_VERIFY_NONE
+	None     = 0,  // MBEDTLS_SSL_VERIFY_NONE
 	Optional = 1,  // MBEDTLS_SSL_VERIFY_OPTIONAL
 	Required = 2,  // MBEDTLS_SSL_VERIFY_REQUIRED
-	Unset = 3,     // MBEDTLS_SSL_VERIFY_UNSET
+	Unset    = 3,  // MBEDTLS_SSL_VERIFY_UNSET
 };
 
 
@@ -39,7 +41,11 @@ public:
 	/** Type of the SSL debug callback. */
 	using DebugCallback = void(*)(void * aUserData, int aDebugLevel, const char * aFileName, int aLineNumber, const char * aMessage);
 
-	/** Type of the SSL certificate verify callback. */
+	/** Type of the SSL certificate verify callback.
+	The callback should return:
+	0 for success,
+	MBEDTLS_ERR_X509_CERT_VERIFY_FAILED and fill in *aVerificationFlags on verification failure,
+	any other value (and set *aVerificationFlags = -1) for a fatal error. */
 	using CertVerifyCallback = int(*)(void * aUserData, mbedtls_x509_crt * aCurrentCert, int aChainDepth, uint32_t * aVerificationFlags);
 
 
