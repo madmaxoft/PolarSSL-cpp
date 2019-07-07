@@ -35,7 +35,8 @@ CryptoKey::CryptoKey(const std::string & aPublicKeyData):
 
 
 
-CryptoKey::CryptoKey(const std::string & aPrivateKeyData, const std::string & aPassword)
+CryptoKey::CryptoKey(const std::string & aPrivateKeyData, const std::string & aPassword):
+	mPk(new mbedtls_pk_context)
 {
 	mbedtls_pk_init(mPk.get());
 	mCtrDrbg.initialize("rsa_privkey", 11);
