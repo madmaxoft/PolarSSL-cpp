@@ -7,7 +7,7 @@
 
 
 
-SslContext::SslContext(void) :
+SslContext::SslContext() :
 	mSsl(new mbedtls_ssl_context),
 	mIsValid(false),
 	mHasHandshaken(false)
@@ -127,7 +127,7 @@ int SslContext::readPlain(void * aData, size_t aMaxBytes)
 
 
 
-int SslContext::performHandshake(void)
+int SslContext::performHandshake()
 {
 	ASSERT(mIsValid);  // Need to call Initialize() first
 	ASSERT(!mHasHandshaken);  // Must not call twice
@@ -144,7 +144,7 @@ int SslContext::performHandshake(void)
 
 
 
-int SslContext::notifyClose(void)
+int SslContext::notifyClose()
 {
 	return mbedtls_ssl_close_notify(mSsl.get());
 }

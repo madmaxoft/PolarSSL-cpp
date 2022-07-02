@@ -106,6 +106,12 @@ public:
 	Returns self (for chaining). */
 	X509CertWriter & setValidity(const std::string & aValidFromStr, const std::string & aValidToStr);
 
+	/** Sets the serial number for the certificate.
+	The serial number is expected to be a string containing a decimal number.
+	Throws a TlsException upon failure.
+	Returns self (for chaining). */
+	X509CertWriter & setSerialNumber(const std::string & aSerialNumber);
+
 	/** Returns the certificate data encoded in DER. */
 	std::string writeDer();
 

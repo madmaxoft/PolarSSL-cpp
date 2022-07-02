@@ -24,6 +24,8 @@ This is an abstract base class, there are descendants that handle the specific a
 data comes into the system:
 	- CallbackSslContext uses callbacks to provide the data
 	- (other descendants removed)
+Note that this class doesn't provide thread safety, the "owner" is expected to synchronize access, especially
+synchronizing between the reads and writes.
 */
 class SslContext
 {

@@ -85,16 +85,17 @@ X509CertPtr X509Cert::fromPrivateKey(
 			.setSubjectName(aSubject)
 			.setIssuerPrivateKey(aPrivateKey)
 			.setSubjectPublicKey(aPublicKey)
-			.setValidity("20010101000000", "20301231235959")
+			.setValidity("20200101000000", "20401231235959")
+			.setSerialNumber("1")
 			.writeDer();
 
-		auto ret = std::make_shared<X509Cert>();
-		auto res = ret->parse(der.data(), der.size());
+		auto cert = std::make_shared<X509Cert>();
+		auto res = cert->parse(der.data(), der.size());
 		if (res != 0)
 		{
 			throw TlsException("Failed to parse cert", res);
 		}
-		return ret;
+		return cert;
 	}
 	catch (const TlsException & exc)
 	{
@@ -123,7 +124,7 @@ X509CertWriter::X509CertWriter():
 	mCtx(new mbedtls_x509write_cert)
 {
 	mbedtls_x509write_crt_init(mCtx.get());
-	mbedtls_x509write_crt_set_version(mCtx.get(), 2);
+	mbedtls_x509write_crt_set_version(mCtx.get(), MBEDTLS_X509_CRT_VERSION_3);
 	mbedtls_x509write_crt_set_md_alg(mCtx.get(), MBEDTLS_MD_SHA256);
 }
 
@@ -207,6 +208,30 @@ X509CertWriter & X509CertWriter::setValidity(const std::string & aValidFromStr, 
 	if (res != 0)
 	{
 		throw TlsException("Failed to set cert validity", res);
+	}
+	return *this;
+}
+
+
+
+
+
+X509CertWriter & X509CertWriter::setSerialNumber(const std::string & aSerialNumber)
+{
+	// Parse the serial number:
+	mbedtls_mpi serialNumber;
+	mbedtls_mpi_init(&serialNumber);
+	auto res = mbedtls_mpi_read_string(&serialNumber, 10, aSerialNumber.c_str());
+	if (res != 0)
+	{
+		throw TlsException("Failed to parse the serial number", res);
+	}
+
+	// Set the serial number:
+	res = mbedtls_x509write_crt_set_serial(mCtx.get(), &serialNumber);
+	if (res != 0)
+	{
+		throw TlsException("Failed to set cert serial number", res);
 	}
 	return *this;
 }
